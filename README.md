@@ -1,4 +1,12 @@
-# EduLead — Admission Lead Management
+The application was validated locally with the frontend and backend running together.
+
+Validated:
+- Backend API starts successfully on port 4000.
+- MySQL database is connected and seeded.
+- Authentication-protected API access works.
+- Authenticated `GET /api/leads` returned HTTP 200 with lead records.
+- Leads page successfully displays the returned lead data in the browser.
+- Frontend runs through Vite on port 5173.# EduLead — Admission Lead Management
 
 A full-stack admissions CRM prototype for the Edumerge Junior Software Engineer assessment (Assignment 5).
 
@@ -109,4 +117,12 @@ Other seeded accounts use the same password. See `server/prisma/seed.ts`.
 
 ## Validation status
 
-The source tree has been created, but dependency installation was not completed in the execution environment used to assemble this project. Run `npm install`, Prisma generation/migration and the builds locally before the assessment submission.
+The application was validated locally with the frontend and backend running together.
+
+Validated:
+- Backend API starts successfully on port 4000.
+- MySQL database is connected and seeded.
+- Authentication-protected API access works.
+- Authenticated `GET /api/leads` returned HTTP 200 with lead records.
+- Leads page successfully displays the returned lead data in the browser.
+- Frontend runs through Vite on port 5173.
