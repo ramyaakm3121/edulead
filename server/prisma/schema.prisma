@@ -1,0 +1,179 @@
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum Role {
+  ADMIN
+  MANAGER
+  COUNSELLOR
+}
+
+enum LeadStatus {
+  NEW
+  CONTACT_ATTEMPTED
+  CONTACTED
+  QUALIFIED
+  COUNSELLING_SCHEDULED
+  COUNSELLING_COMPLETED
+  APPLICATION_STARTED
+  APPLICATION_SUBMITTED
+  OFFER_MADE
+  ENROLLED
+  NURTURE
+  LOST
+  DUPLICATE
+  INVALID
+}
+
+enum Priority {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+enum ActivityType {
+  LEAD_CREATED
+  ASSIGNED
+  REASSIGNED
+  CALL
+  WHATSAPP
+  EMAIL
+  NOTE
+  STATUS_CHANGED
+  FOLLOW_UP_CREATED
+  FOLLOW_UP_COMPLETED
+  CONVERTED
+  LOST
+}
+
+enum FollowUpActionType {
+  CALL
+  WHATSAPP
+  EMAIL
+  COUNSELLING
+  CAMPUS_VISIT
+  DOCUMENT_FOLLOW_UP
+  APPLICATION_FOLLOW_UP
+  PAYMENT_FOLLOW_UP
+  OTHER
+}
+
+enum FollowUpStatus {
+  PENDING
+  COMPLETED
+  CANCELLED
+}
+
+model User {
+  id          Int          @id @default(autoincrement())
+  name        String       @db.VarChar(100)
+  email       String       @unique @db.VarChar(255)
+  passwordHash String      @db.VarChar(255)
+  role        Role
+  isActive    Boolean      @default(true)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  leads       Lead[]       @relation("AssignedLeads")
+  activities  Activity[]   @relation("CreatedActivities")
+  followUps   FollowUp[]   @relation("AssignedFollowUps")
+  createdFollowUps FollowUp[] @relation("CreatedFollowUps")
+}
+
+model Course {
+  id        Int      @id @default(autoincrement())
+  name      String   @db.VarChar(150)
+  code      String   @unique @db.VarChar(50)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  leads     Lead[]
+}
+
+model LeadSource {
+  id        Int      @id @default(autoincrement())
+  name      String   @unique @db.VarChar(100)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  leads     Lead[]
+}
+
+model Lead {
+  id                Int        @id @default(autoincrement())
+  leadNumber        String     @unique @db.VarChar(30)
+  fullName          String     @db.VarChar(150)
+  phone             String     @db.VarChar(20)
+  email             String?    @db.VarChar(255)
+  city              String?    @db.VarChar(100)
+  courseId          Int?
+  preferredIntake   String?    @db.VarChar(50)
+  campus            String?    @db.VarChar(100)
+  qualification     String?    @db.VarChar(100)
+  sourceId          Int?
+  campaignName     String?    @db.VarChar(150)
+  assignedTo        Int?
+  status            LeadStatus @default(NEW)
+  priority          Priority   @default(MEDIUM)
+  lastContactedAt   DateTime?
+  nextFollowUpAt   DateTime?
+  nextAction        String?    @db.VarChar(150)
+  convertedAt       DateTime?
+  lostReason        String?    @db.VarChar(255)
+  createdAt         DateTime   @default(now())
+  updatedAt         DateTime   @updatedAt
+  course            Course?    @relation(fields: [courseId], references: [id])
+  source            LeadSource? @relation(fields: [sourceId], references: [id])
+  assignee          User?      @relation("AssignedLeads", fields: [assignedTo], references: [id])
+  activities        Activity[]
+  followUps         FollowUp[]
+
+  @@index([phone])
+  @@index([email])
+  @@index([status])
+  @@index([assignedTo])
+  @@index([nextFollowUpAt])
+  @@index([createdAt])
+  @@index([sourceId])
+  @@index([courseId])
+}
+
+model Activity {
+  id          Int          @id @default(autoincrement())
+  leadId      Int
+  activityType ActivityType
+  description String?      @db.Text
+  oldStatus   String?      @db.VarChar(50)
+  newStatus   String?      @db.VarChar(50)
+  createdBy   Int
+  createdAt   DateTime     @default(now())
+  lead        Lead         @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  creator     User         @relation("CreatedActivities", fields: [createdBy], references: [id])
+
+  @@index([leadId, createdAt])
+}
+
+model FollowUp {
+  id          Int               @id @default(autoincrement())
+  leadId      Int
+  actionType  FollowUpActionType
+  dueAt       DateTime
+  notes       String?           @db.Text
+  outcome     String?           @db.VarChar(255)
+  status      FollowUpStatus    @default(PENDING)
+  assignedTo  Int
+  createdBy   Int
+  completedAt DateTime?
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+  lead        Lead              @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  assignee    User              @relation("AssignedFollowUps", fields: [assignedTo], references: [id])
+  creator     User              @relation("CreatedFollowUps", fields: [createdBy], references: [id])
+
+  @@index([assignedTo, dueAt, status])
+  @@index([leadId])
+}

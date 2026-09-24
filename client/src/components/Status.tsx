@@ -1,0 +1,1 @@
+import type{LeadStatus,Priority}from'../types';export function Status({value}:{value:LeadStatus}){return <span className={`badge status ${value.toLowerCase()}`}>{value.replaceAll('_',' ')}</span>}export function Priority({value}:{value:Priority}){return <span className={`badge priority ${value.toLowerCase()}`}>{value}</span>}
