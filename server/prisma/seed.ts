@@ -71,8 +71,8 @@ async function main() {
         courseId: course.id, preferredIntake: '2027', campus: 'Main Campus', qualification: 'Undergraduate',
         sourceId: source.id, campaignName: i % 2 === 0 ? 'Admissions 2027' : null,
         assignedTo: assigned, status, priority,
-        nextAction: [LeadStatus.ENROLLED, LeadStatus.LOST].includes(status) ? null : 'Follow up with student',
-        nextFollowUpAt: [LeadStatus.ENROLLED, LeadStatus.LOST].includes(status) ? null : new Date(Date.now() + (i - 2) * 60 * 60 * 1000),
+        nextAction: status === LeadStatus.ENROLLED || status === LeadStatus.LOST ? null : 'Follow up with student',
+        nextFollowUpAt: status === LeadStatus.ENROLLED || status === LeadStatus.LOST ? null : new Date(Date.now() + (i - 2) * 60 * 60 * 1000),
         convertedAt: status === LeadStatus.ENROLLED ? new Date() : null,
         lostReason: status === LeadStatus.LOST ? 'Chose another institution' : null,
         createdAt,
@@ -94,7 +94,7 @@ async function main() {
       }
     }
 
-    if (![LeadStatus.ENROLLED, LeadStatus.LOST].includes(status)) {
+    if (status !== LeadStatus.ENROLLED && status !== LeadStatus.LOST) {
       const followUp = await prisma.followUp.findFirst({ where: { leadId: lead.id } });
       if (!followUp && assigned) {
         await prisma.followUp.create({

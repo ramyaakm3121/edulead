@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import type { LeadStatus, Priority } from '@prisma/client';
+import type { LeadStatus, Priority, Prisma } from '@prisma/client';
 import { prisma } from './auth.js';
 import type { AuthRequest } from './auth.js';
 import type { Response } from 'express';
@@ -72,7 +72,7 @@ async function validateReferences(data: { courseId?: number | null; sourceId?: n
   return null;
 }
 
-async function nextLeadNumber(tx: typeof prisma) {
+async function nextLeadNumber(tx: Prisma.TransactionClient) {
   const count = await tx.lead.count();
   return `LD-${String(count + 1).padStart(5, '0')}`;
 }
@@ -157,8 +157,9 @@ export async function updateLead(req: AuthRequest, res: Response) {
   const refError = await validateReferences(data);
   if (refError) return error(res, 400, refError, 'One or more referenced records are invalid or inactive');
   if (data.status === 'LOST' && !(data.lostReason ?? existing.lostReason)?.trim()) return error(res, 400, 'LOST_REASON_REQUIRED', 'Lost reason is required when status is LOST');
-  if (data.status === 'ENROLLED' && !existing.convertedAt) (data as any).convertedAt = new Date();
-  if (data.status && data.status !== 'ENROLLED') (data as any).convertedAt = data.status === 'ENROLLED' ? new Date() : existing.convertedAt;
+  if (data.status === 'ENROLLED' && !existing.convertedAt) {
+    (data as any).convertedAt = new Date();
+  }
 
   const statusChanged = data.status && data.status !== existing.status;
   const assignmentChanged = data.assignedTo !== undefined && data.assignedTo !== existing.assignedTo;
